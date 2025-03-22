@@ -5,7 +5,10 @@ import {
   verifyOTP,
   registerFarmer,
   loginFarmer,
-  registerFarmerComplete
+  registerFarmerComplete,
+  sendLoginOTP,
+  verifyLoginOTP,
+  getFarmerDetails 
 } from '../controllers/farmerController';
 
 // Create router without explicit type annotation
@@ -17,6 +20,10 @@ router.post('/send-otp', sendOTP);
 router.post('/verify-otp', verifyOTP);
 router.post('/register', registerFarmer);
 router.post('/login', loginFarmer);
+router.post('/send-login-otp', sendLoginOTP);
+router.post('/verify-login-otp', verifyLoginOTP)
 router.post('/register-complete', registerFarmerComplete);
+
+router.get('/:farmerId/details', getFarmerDetails);
 
 export default router;

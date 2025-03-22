@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import farmerRoutes from './routes/farmerRoutes';
-
+import authRoutes from './routes/authRoutes';
 // Load environment variables
 dotenv.config();
 
@@ -10,17 +10,24 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 8000;
 
-
 // Middleware
-app.use(cors());
+
+// Allowed domains
+app.use(cors(
+  {
+    origin: 'http://localhost:3000'
+  }
+));
+
+// Enable JSON parsing
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/farmers', farmerRoutes);
 
-// Health check route
-app.get('/health', (req, res) => {
+app.use('/api/auth', authRoutes);
+
+app.get('/', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
@@ -28,6 +35,5 @@ app.get('/health', (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
 
 export default app;

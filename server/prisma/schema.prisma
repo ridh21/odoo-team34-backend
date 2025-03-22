@@ -1,0 +1,356 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum FarmerStatus {
+  PGS_GREEN
+  PGS_ORGANIC
+}
+
+enum PGSCertificateType {
+  Individual_Farmer
+  Local_Group
+}
+
+enum IrrigationMethod {
+  Irrigation
+  Rainfed
+}
+
+enum LandOwnership {
+  Rented
+  Own
+  Lease
+}
+
+enum Season {
+  Summer
+  Rainy
+  Rabi
+}
+
+enum SoilType {
+  Black
+  Red
+}
+
+enum SoilPH {
+  Acidic
+  Basic
+  Neutral
+}
+
+enum SoilEC {
+  Normal
+  Abnormal
+}
+
+enum NutrientLevel {
+  Low
+  Medium
+  High
+}
+
+enum NutrientSufficiency {
+  Sufficient
+  Insufficient
+}
+
+enum QuantityCategory {
+  Standard
+  Sample
+  Bulk
+}
+
+enum PaymentStatus {
+  Pending
+  Paid
+  Failed
+  Refunded
+}
+
+enum OrderStatus {
+  Pending
+  Processing
+  Shipped
+  Delivered
+  Cancelled
+}
+
+enum PaymentMethod {
+  UPI
+  Card
+  Net_Banking
+  Wallet
+}
+
+enum RefundStatus {
+  Processing
+  Completed
+  Failed
+}
+
+enum TransactionType {
+  Debit
+  Credit
+  Refund
+}
+
+enum TransactionStatus {
+  Pending
+  Success
+  Failed
+}
+
+// Models
+model Admin {
+  id                String @id @default(uuid())
+  governmentEmailID String
+  password          String
+}
+
+model Farmers {
+  id        String    @id @default(uuid())
+  adharUUID String    @unique
+  password  String
+  otp       String?
+  otpExpiry DateTime?
+  adharCard AdharCard @relation(fields: [adharUUID], references: [id])
+  crops     Crop[]
+  products  Product[]
+}
+
+model Users {
+  id           String        @id @default(uuid())
+  emailID      String?       @unique
+  mobileNumber String?       @unique
+  password     String
+  longitude    Float?
+  latitude     Float?
+  state        String?
+  city         String?
+  pincode      String?
+  otp          String?
+  otpExpiry    DateTime?
+  coins        Int           @default(0)
+  orders       Order[]
+  transactions Transaction[]
+}
+
+model GovernmentData {
+  id                 String          @id @default(uuid())
+  adharUUID          String
+  pgsCertificateUUID String?
+  soilHealthCardUUID String?
+  adharCard          AdharCard       @relation(fields: [adharUUID], references: [id])
+  pgsCertificate     PGSCertificate? @relation(fields: [pgsCertificateUUID], references: [id])
+  soilHealthCard     SoilHealthCard? @relation(fields: [soilHealthCardUUID], references: [id])
+}
+
+model PGSCertificate {
+  id                String             @id @default(uuid())
+  type              PGSCertificateType
+  adharUUID         String
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankIFSCCode      String?
+  emailID           String?
+  certificateNumber String?            @unique
+  dateOfIssue       DateTime?
+  expiryDate        DateTime?
+  memberCode        String?
+  localGroupNumber  String?
+  farmerStatus      FarmerStatus?
+  authorizationNo   String?
+  farmerLandUUID    String?
+  cropUUID          String?
+  plotUUID          String?
+  plantationDate    DateTime?
+  pruningDate       DateTime?
+  isIrrigated       Boolean?
+  irrigationMethod  IrrigationMethod?
+  adharCard         AdharCard          @relation(fields: [adharUUID], references: [id])
+  farmerLand        FarmerLand?        @relation(fields: [farmerLandUUID], references: [id])
+  crop              Crop?              @relation(fields: [cropUUID], references: [id])
+  plot              Plot?              @relation(fields: [plotUUID], references: [id])
+  governmentData    GovernmentData[]
+}
+
+model FarmerLand {
+  id              String           @id @default(uuid())
+  certificateUUID String?
+  totalArea       Float?
+  organicArea     Float?
+  landOwnership   LandOwnership?
+  totalPlots      Int?
+  pgsCertificates PGSCertificate[]
+}
+
+model Plot {
+  id              String           @id @default(uuid())
+  khasraNumber    String?
+  latitude        Float?
+  longitude       Float?
+  pgsCertificates PGSCertificate[]
+}
+
+model Crop {
+  id              String               @id @default(uuid())
+  farmerUUID      String
+  season          Season?
+  cropName        String
+  area            Float?
+  fertilizersUsed String?
+  chemicalsUsed   String?
+  mspUUID         String?
+  farmer          Farmers              @relation(fields: [farmerUUID], references: [id])
+  msp             MSP?                 @relation(fields: [mspUUID], references: [id])
+  pgsCertificates PGSCertificate[]
+  productMappings ProductCropMapping[]
+}
+
+model SoilHealthCard {
+  id                  String               @id @default(uuid())
+  adharUUID           String
+  expirationDate      DateTime?
+  type                SoilType?
+  pH                  SoilPH?
+  ec                  SoilEC?
+  organicCarbon       NutrientLevel?
+  availableNitrogen   NutrientLevel?
+  availablePhosphorus NutrientLevel?
+  availablePotassium  NutrientLevel?
+  availableSulphur    NutrientSufficiency?
+  availableZinc       NutrientSufficiency?
+  availableBoron      NutrientSufficiency?
+  availableIron       NutrientSufficiency?
+  availableManganese  NutrientSufficiency?
+  availableCopper     NutrientSufficiency?
+  adharCard           AdharCard            @relation(fields: [adharUUID], references: [id])
+  governmentData      GovernmentData[]
+}
+
+model AdharCard {
+  id              String           @id @default(uuid())
+  adharNumber     String           @unique
+  name            String
+  mobileNumber    String?
+  dob             DateTime?
+  gender          Gender?
+  address         String?
+  farmers         Farmers[]
+  governmentData  GovernmentData[]
+  pgsCertificates PGSCertificate[]
+  soilHealthCards SoilHealthCard[]
+}
+
+model MSP {
+  id                  String    @id @default(uuid())
+  cropName            String
+  minimumSupportPrice Int
+  crops               Crop[]
+  products            Product[]
+}
+
+model Product {
+  id                  String               @id @default(uuid())
+  productName         String
+  farmerUUID          String
+  images              String[]
+  qrCodeString        String?
+  quantityDetailsUUID String?
+  mspUUID             String?
+  isRefundable        Boolean              @default(false)
+  returnDays          Int?
+  exchangeDays        Int?
+  farmer              Farmers              @relation(fields: [farmerUUID], references: [id])
+  quantityDetails     Quantity?            @relation(fields: [quantityDetailsUUID], references: [id])
+  msp                 MSP?                 @relation(fields: [mspUUID], references: [id])
+  cropMappings        ProductCropMapping[]
+}
+
+model ProductCropMapping {
+  id          String  @id @default(uuid())
+  productUUID String
+  cropUUID    String
+  product     Product @relation(fields: [productUUID], references: [id])
+  crop        Crop    @relation(fields: [cropUUID], references: [id])
+}
+
+model Quantity {
+  id              String            @id @default(uuid())
+  category        QuantityCategory?
+  productQuantity Float?
+  actualPrice     Int?
+  discount        Int?
+  discountedPrice Int?
+  products        Product[]
+}
+
+model Order {
+  id              String        @id @default(uuid())
+  userUUID        String
+  totalAmount     Int
+  paymentStatus   PaymentStatus @default(Pending)
+  orderStatus     OrderStatus   @default(Pending)
+  razorpayOrderID String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  earnedCoins     Int?
+  user            Users         @relation(fields: [userUUID], references: [id])
+  payments        Payment[]
+}
+
+model Payment {
+  id                String         @id @default(uuid())
+  orderUUID         String
+  razorpayPaymentID String?
+  amountPaid        Int
+  paymentMethod     PaymentMethod?
+  paymentStatus     PaymentStatus  @default(Pending)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  usedCoins         Int?
+  order             Order          @relation(fields: [orderUUID], references: [id])
+  refunds           Refund[]
+  transactions      Transaction[]
+}
+
+model Refund {
+  id               String       @id @default(uuid())
+  paymentUUID      String
+  razorpayRefundID String?
+  refundAmount     Float
+  refundStatus     RefundStatus @default(Processing)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  payment          Payment      @relation(fields: [paymentUUID], references: [id])
+}
+
+model Transaction {
+  id                String            @id @default(uuid())
+  userUUID          String
+  paymentUUID       String?
+  transactionType   TransactionType
+  transactionAmount Int
+  transactionStatus TransactionStatus @default(Pending)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              Users             @relation(fields: [userUUID], references: [id])
+  payment           Payment?          @relation(fields: [paymentUUID], references: [id])
+}

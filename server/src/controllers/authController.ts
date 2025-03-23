@@ -216,6 +216,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.status(200).json({
+      success: true,
       message: 'Login successful',
       user: userWithoutPassword,
       token,

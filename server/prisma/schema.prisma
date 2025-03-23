@@ -133,6 +133,7 @@ model Farmers {
   adharCard AdharCard @relation(fields: [adharUUID], references: [id])
   crops     Crop[]
   products  Product[]
+  receivedMessages Message[] @relation("FarmerMessages")
 }
 
 model Users {
@@ -150,6 +151,7 @@ model Users {
   coins        Int           @default(0)
   orders       Order[]
   transactions Transaction[]
+  sentMessages Message[] @relation("UserMessages")
 }
 
 model GovernmentData {
@@ -354,3 +356,18 @@ model Transaction {
   user              Users             @relation(fields: [userUUID], references: [id])
   payment           Payment?          @relation(fields: [paymentUUID], references: [id])
 }
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String   // ID of the sender (User or Farmer)
+  receiverId String   // ID of the receiver (User or Farmer)
+  content    String   // Message content
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  sender     Users    @relation(fields: [senderId], references: [id], name: "UserMessages")
+  receiver   Farmers  @relation(fields: [receiverId], references: [id], name: "FarmerMessages")
+  
+  // Add this field to determine if sender is user or farmer
+  senderType String   // "user" or "farmer"
+}
+
